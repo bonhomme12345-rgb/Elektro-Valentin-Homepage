@@ -41,12 +41,20 @@ jobs:
       - name: Vorschau veröffentlichen
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          npx firebase hosting:channel:deploy "pr-${{ github.event.number }}" --expires 7d --project "$PROJECT_ID" --non-interactive --json > channel.json
+          if ! npx firebase hosting:channel:deploy "pr-${{ github.event.number }}" --expires 7d --project "$PROJECT_ID" --non-interactive --json > channel.json 2> error.log; then
+            echo "::error title=Vorschau fehlgeschlagen::$(cat channel.json error.log | tr '\n' ' ' | tail -c 1500)"
+            exit 1
+          fi
           URL=$(node -e "const r=require('./channel.json').result; console.log(Object.values(r)[0].url)")
-          echo "Vorschau: $URL"
+          echo "::notice title=Vorschau::$URL"
           echo "### Vorschau: $URL" >> "$GITHUB_STEP_SUMMARY"
 
       # Auf main: Seite und Datenbank-Regeln live schalten
       - name: Live veröffentlichen
         if: github.event_name != 'pull_request'
-        run: npx firebase deploy --only hosting,firestore --project "$PROJECT_ID" --non-interactive
+        run: |
+          set -o pipefail
+          if ! npx firebase deploy --only hosting,firestore --project "$PROJECT_ID" --non-interactive 2>&1 | tee deploy.log; then
+            echo "::error title=Veröffentlichen fehlgeschlagen::$(tail -c 1500 deploy.log | tr '\n' ' ')"
+            exit 1
+          fi
