@@ -37,20 +37,11 @@ Projekt: [elektro-valentin](https://console.firebase.google.com/project/elektro-
    Sammlungs-ID `admins` → Dokument-ID = deine Google-E-Mail-Adresse in
    Kleinbuchstaben (z. B. `max.mustermann@gmail.com`) → ein Feld `name` mit
    deinem Namen → Speichern. Weitere Personen schaltest du genauso frei.
-5. **Automatisches Veröffentlichen von GitHub aus:**
-   1. In der [Google Cloud Console → Dienstkonten](https://console.cloud.google.com/iam-admin/serviceaccounts?project=elektro-valentin)
-      „Dienstkonto erstellen“, Name `github-deploy`.
-   2. Rollen vergeben: **Firebase Admin** und **Service Usage Consumer**
-      (deutsch: „Firebase-Administrator“ und „Service Usage-Nutzer“).
-   3. Das Dienstkonto öffnen → „Schlüssel“ → „Schlüssel hinzufügen“ → JSON.
-      Eine Datei wird heruntergeladen.
-   4. Im GitHub-Repository: Settings → Secrets and variables → Actions →
-      „New repository secret“, Name `FIREBASE_SERVICE_ACCOUNT`, als Wert den
-      kompletten Inhalt der JSON-Datei einfügen.
-   5. Die JSON-Datei danach auf deinem Rechner löschen.
-
-   Ab jetzt wird jede Änderung auf `main` automatisch veröffentlicht. Bei einem
-   Pull Request schreibt GitHub einen Vorschau-Link in den Pull Request.
+5. **Automatisches Veröffentlichen von GitHub aus:** ist eingerichtet. GitHub
+   meldet sich über Workload Identity Federation beim Dienstkonto
+   `github-deploy` an, ganz ohne Schlüsseldatei; nur dieses Repository darf das.
+   Jede Änderung auf `main` wird automatisch veröffentlicht, jeder Pull Request
+   bekommt einen Vorschau-Link (siehe „Summary“ des GitHub-Laufs).
 
 6. **Eigene Domain:** Hosting → „Benutzerdefinierte Domain hinzufügen“ und die
    angezeigten DNS-Einträge bei Squarespace Domains eintragen. Danach unter
