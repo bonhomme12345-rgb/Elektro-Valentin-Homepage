@@ -1,0 +1,35 @@
+{
+  "name": "elektro-valentin-homepage",
+  "version": "1.0.0",
+  "description": "Firmenhomepage von Elektro Valentin mit Adminmenü auf Firebase",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && (node scripts/build.mjs --watch & firebase emulators:start --project demo-elektro-valentin)",
+    "test": "node --test test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bonhomme12345-rgb/elektro-valentin-homepage.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bonhomme12345-rgb/elektro-valentin-homepage/issues"
+  },
+  "homepage": "https://github.com/bonhomme12345-rgb/elektro-valentin-homepage#readme",
+  "dependencies": {
+    "firebase": "^12.19.0"
+  },
+  "devDependencies": {
+    "@fontsource/nunito": "^5.3.0",
+    "@fontsource/nunito-sans": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "firebase-tools": "^15.34.1"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}

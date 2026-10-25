@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Adminmenü – Elektro Valentin</title>
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/site.css?v={{version}}">
+<link rel="stylesheet" href="/assets/css/admin.css?v={{version}}">
+</head>
+<body class="admin-body">
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/" target="_blank" rel="noopener" aria-label="Seite in neuem Tab öffnen">
+      <svg class="bolt" viewBox="0 0 150 330" aria-hidden="true"><path d="M55 5 H130 L100 115 L145 98 L60 270 L95 255 L5 325 L10 215 L30 230 L60 150 L20 165 Z"/></svg>
+      <span class="word">ADMINMENÜ</span>
+    </a>
+    <div class="admin-user" id="user-box">
+      <a class="btn small ghost" href="/" target="_blank" rel="noopener">Seite ansehen</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap admin-main">
+  <p id="screen-loading" class="muted">Wird geladen …</p>
+
+  <section id="screen-login" class="screen" hidden>
+    <h1>Anmelden</h1>
+    <p>Melde dich mit deinem Google-Konto an, um Texte, Bilder, Neuigkeiten und Öffnungszeiten zu bearbeiten.</p>
+    <button class="btn primary" id="login" type="button">Mit Google anmelden</button>
+  </section>
+
+  <section id="screen-denied" class="screen" hidden>
+    <h1>Kein Zugang</h1>
+    <p>Das Konto <strong id="denied-email"></strong> darf das Adminmenü nicht bearbeiten.</p>
+    <p class="muted">Freischalten: In der Firebase-Konsole unter Firestore eine Sammlung <code>admins</code> anlegen und darin ein Dokument mit genau dieser E-Mail-Adresse als Dokument-ID. Danach diese Seite neu laden.</p>
+    <button class="btn" type="button" data-logout>Mit anderem Konto anmelden</button>
+  </section>
+
+  <section id="screen-app" class="admin-layout" hidden>
+    <nav class="admin-nav" aria-label="Bereiche">
+      <button type="button" data-panel="texte">Seitentexte</button>
+      <button type="button" data-panel="leistungen">Leistungen</button>
+      <button type="button" data-panel="zeiten">Öffnungszeiten</button>
+      <button type="button" data-panel="neuigkeiten">Neuigkeiten</button>
+      <button type="button" data-panel="referenzen">Referenzen</button>
+      <button type="button" data-panel="bilder">Bilder</button>
+      <button type="button" data-panel="anfragen">Anfragen <span class="badge" id="badge-messages" hidden></span></button>
+      <div class="nav-foot">
+        <span class="muted small-text" id="user-email"></span>
+        <button type="button" class="link" data-logout>Abmelden</button>
+      </div>
+    </nav>
+    <div class="panel" id="panel"></div>
+  </section>
+</main>
+<div id="toast" class="toast" role="status" hidden></div>
+<script type="module" src="/assets/js/admin.js?v={{version}}"></script>
+</body>
+</html>
