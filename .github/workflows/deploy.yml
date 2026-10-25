@@ -8,14 +8,18 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  checks: write
+  id-token: write
+
+env:
+  PROJECT_ID: elektro-valentin
+  # Anmeldung bei Google ohne Schlüsseldatei (Workload Identity Federation).
+  # Nur dieses Repository darf das Dienstkonto benutzen.
+  WORKLOAD_IDENTITY_PROVIDER: projects/485980459991/locations/global/workloadIdentityPools/github/providers/github
+  SERVICE_ACCOUNT: github-deploy@elektro-valentin.iam.gserviceaccount.com
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      HAS_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,26 +30,23 @@ jobs:
       - run: npm test
       - run: npm run build
 
+      - name: Bei Google anmelden
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
       # Bei einem Pull Request: Vorschau-Link, der 7 Tage gültig ist
       - name: Vorschau veröffentlichen
-        if: github.event_name == 'pull_request' && env.HAS_SERVICE_ACCOUNT == 'true'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: elektro-valentin
-          expires: 7d
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          npx firebase hosting:channel:deploy "pr-${{ github.event.number }}" --expires 7d --project "$PROJECT_ID" --non-interactive --json > channel.json
+          URL=$(node -e "const r=require('./channel.json').result; console.log(Object.values(r)[0].url)")
+          echo "Vorschau: $URL"
+          echo "### Vorschau: $URL" >> "$GITHUB_STEP_SUMMARY"
 
       # Auf main: Seite und Datenbank-Regeln live schalten
       - name: Live veröffentlichen
-        if: github.event_name != 'pull_request' && env.HAS_SERVICE_ACCOUNT == 'true'
-        env:
-          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: |
-          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx firebase deploy --only hosting,firestore --project elektro-valentin --non-interactive
-
-      - name: Hinweis ohne Zugangsschlüssel
-        if: env.HAS_SERVICE_ACCOUNT != 'true'
-        run: echo "::notice::Seite gebaut, aber nicht veröffentlicht. Es fehlt das Secret FIREBASE_SERVICE_ACCOUNT (siehe README)."
+        if: github.event_name != 'pull_request'
+        run: npx firebase deploy --only hosting,firestore --project "$PROJECT_ID" --non-interactive
