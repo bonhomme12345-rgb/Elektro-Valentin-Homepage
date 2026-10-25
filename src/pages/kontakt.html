@@ -1,0 +1,39 @@
+<!--meta {"title": "Kontakt – Elektro Valentin", "description": "So erreichen Sie Elektro Valentin in Wettenberg: Telefon, Adresse und Kontaktformular.", "nav": "kontakt"} -->
+<!-- @head -->
+</head>
+<body>
+<!-- @header -->
+<main class="wrap" id="inhalt">
+<section class="page">
+  <div class="intro">
+    <div class="eyebrow">Kontakt</div>
+    <h1 data-text="kontaktseite.titel"></h1>
+    <div class="lead" data-text="kontaktseite.text"></div>
+  </div>
+  <div class="grid2">
+    <div class="contact-info">
+      <dl class="contact-list">
+        <div><dt>Adresse</dt><dd><span data-text="kontakt.strasse"></span><br><span data-text="kontakt.ort"></span></dd></div>
+        <div><dt>Telefon</dt><dd><a data-tel="kontakt.telefon" data-text="kontakt.telefon"></a></dd></div>
+        <div><dt>Telefax</dt><dd data-text="kontakt.fax"></dd></div>
+        <div><dt>Mobil</dt><dd><a data-tel="kontakt.mobil" data-text="kontakt.mobil"></a></dd></div>
+        <div data-hide-empty="kontakt.email"><dt>E-Mail</dt><dd><a data-mail="kontakt.email" data-text="kontakt.email"></a></dd></div>
+      </dl>
+      <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=Burgstra%C3%9Fe+22+35435+Wettenberg" target="_blank" rel="noopener">Route in Google Maps öffnen</a>
+      <h2 class="section-title">Öffnungszeiten</h2>
+      <table class="hours"><tbody data-render="hours"></tbody></table>
+      <p class="muted small-text" data-render="hours-note"></p>
+    </div>
+    <form class="contact" id="contact-form">
+      <label for="c-name">Name<input id="c-name" name="name" autocomplete="name" maxlength="100" required></label>
+      <label for="c-contact">Telefon oder E-Mail<input id="c-contact" name="contact" maxlength="200" required></label>
+      <label for="c-msg">Ihr Anliegen<textarea id="c-msg" name="message" maxlength="5000" required></textarea></label>
+      <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+      <p class="muted small-text">Wir verwenden Ihre Angaben nur, um Ihre Anfrage zu bearbeiten. Mehr dazu in der <a href="/datenschutz">Datenschutzerklärung</a>.</p>
+      <button class="btn primary" type="submit">Anfrage senden</button>
+      <p class="form-msg" id="form-msg" role="status" hidden></p>
+    </form>
+  </div>
+</section>
+</main>
+<!-- @footer -->

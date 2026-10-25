@@ -1,0 +1,51 @@
+name: Veröffentlichen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      # Bei einem Pull Request: Vorschau-Link, der 7 Tage gültig ist
+      - name: Vorschau veröffentlichen
+        if: github.event_name == 'pull_request' && env.HAS_SERVICE_ACCOUNT == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: elektro-valentin
+          expires: 7d
+
+      # Auf main: Seite und Datenbank-Regeln live schalten
+      - name: Live veröffentlichen
+        if: github.event_name != 'pull_request' && env.HAS_SERVICE_ACCOUNT == 'true'
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx firebase deploy --only hosting,firestore --project elektro-valentin --non-interactive
+
+      - name: Hinweis ohne Zugangsschlüssel
+        if: env.HAS_SERVICE_ACCOUNT != 'true'
+        run: echo "::notice::Seite gebaut, aber nicht veröffentlicht. Es fehlt das Secret FIREBASE_SERVICE_ACCOUNT (siehe README)."
