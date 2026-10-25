@@ -4,6 +4,9 @@ import {
 import {
   doc, getDoc, setDoc, deleteDoc, addDoc, collection, getDocs, query, orderBy,
 } from 'firebase/firestore/lite';
+import {
+  getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject,
+} from 'firebase/storage';
 import { initFirebase, isLocal } from './firebase.js';
 import {
   GROUPS, TEXTS, textDefaults, DEFAULT_SERVICES, DEFAULT_HOURS, DEFAULT_REFERENCES, IMAGE_SLOTS,
@@ -13,6 +16,7 @@ import { resizeImage } from './images.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 let db;
+let storage;
 
 // Kleiner Helfer, um Elemente ohne innerHTML zu bauen.
 function h(tag, attrs = {}, ...children) {
@@ -70,6 +74,27 @@ function uniqueId(title, items) {
 
 /* ---------- Bilder ---------- */
 
+// Fotos liegen in Firebase Storage unter images/, die Datenbank merkt sich
+// zu jedem Bildplatz die Adresse. Ältere Einträge haben das Bild noch direkt
+// im Feld "data" gespeichert.
+async function uploadImage(key, file, alt) {
+  const blob = await resizeImage(file);
+  const path = `images/${key}-${Date.now()}.jpg`;
+  await uploadBytes(ref(storage, path), blob, { contentType: 'image/jpeg', cacheControl: 'public, max-age=31536000' });
+  const url = await getDownloadURL(ref(storage, path));
+  const old = await getDoc(doc(db, 'images', key));
+  await setDoc(doc(db, 'images', key), { url, path, alt, updatedAt: new Date().toISOString() });
+  if (old.exists() && old.data().path) await deleteObject(ref(storage, old.data().path)).catch(() => {});
+  return url;
+}
+
+async function removeImage(key) {
+  const snap = await getDoc(doc(db, 'images', key));
+  if (!snap.exists()) return;
+  if (snap.data().path) await deleteObject(ref(storage, snap.data().path)).catch(() => {});
+  await deleteDoc(doc(db, 'images', key));
+}
+
 function imageControl(key, label, { disabledText } = {}) {
   const preview = h('div', { class: 'img-preview' }, 'Kein Foto');
   const alt = h('input', { id: `alt-${key}`, placeholder: 'Kurze Bildbeschreibung, z. B. „Neuer Zählerschrank“' });
@@ -90,15 +115,13 @@ function imageControl(key, label, { disabledText } = {}) {
     remove.hidden = !data;
   };
   getDoc(doc(db, 'images', key)).then((snap) => {
-    if (snap.exists()) { show(snap.data().data); alt.value = snap.data().alt || ''; } else show(null);
+    if (snap.exists()) { show(snap.data().url || snap.data().data); alt.value = snap.data().alt || ''; } else show(null);
   });
   file.addEventListener('change', async () => {
     if (!file.files[0]) return;
-    status.textContent = 'Foto wird verkleinert und gespeichert …';
+    status.textContent = 'Foto wird verkleinert und hochgeladen …';
     try {
-      const data = await resizeImage(file.files[0]);
-      await setDoc(doc(db, 'images', key), { data, alt: alt.value.trim(), updatedAt: new Date().toISOString() });
-      show(data);
+      show(await uploadImage(key, file.files[0], alt.value.trim()));
       toast('Foto gespeichert.');
     } catch (err) {
       console.error(err);
@@ -117,7 +140,7 @@ function imageControl(key, label, { disabledText } = {}) {
   });
   remove.addEventListener('click', () => run(remove, 'Wird entfernt …', async () => {
     if (!confirm('Dieses Foto wirklich entfernen?')) return;
-    await deleteDoc(doc(db, 'images', key));
+    await removeImage(key);
     show(null);
     toast('Foto entfernt.');
   }));
@@ -206,7 +229,7 @@ function listPanel(panel, { title, path, defaults, imagePrefix, fields, addLabel
     await setDoc(doc(db, ...path.split('/')), { items });
     // Fotos gelöschter Einträge mit entfernen
     const ids = new Set(items.map((i) => i.id));
-    await Promise.all(before.filter((i) => !ids.has(i.id)).map((i) => deleteDoc(doc(db, 'images', `${imagePrefix}-${i.id}`))));
+    await Promise.all(before.filter((i) => !ids.has(i.id)).map((i) => removeImage(`${imagePrefix}-${i.id}`)));
     render();
     toast('Gespeichert. Die Seite zeigt die Änderung ab sofort.');
   }));
@@ -353,7 +376,7 @@ async function newsPanel(panel) {
 async function imagesPanel(panel) {
   panel.replaceChildren(
     h('h2', {}, 'Bilder'),
-    h('p', { class: 'hint' }, 'Fotos werden beim Hochladen automatisch verkleinert. Fotos für einzelne Leistungen und Referenzen fügst du in diesen Bereichen hinzu. Ohne Foto zeigt die Seite den gelben Blitz auf Blau.'),
+    h('p', { class: 'hint' }, 'Fotos werden beim Hochladen automatisch auf eine passende Größe gebracht. Fotos für einzelne Leistungen und Referenzen fügst du in diesen Bereichen hinzu. Ohne Foto zeigt die Seite den gelben Blitz auf Blau.'),
     ...IMAGE_SLOTS.map((s) => h('div', { class: 'card' }, imageControl(s.key, s.label))),
   );
 }
@@ -424,6 +447,8 @@ async function start() {
   ({ db } = await initFirebase());
   const { app } = await initFirebase();
   const auth = getAuth(app);
+  storage = getStorage(app);
+  if (isLocal) connectStorageEmulator(storage, location.hostname, 9199);
   if (isLocal) {
     connectAuthEmulator(auth, `http://${location.hostname}:9099`, { disableWarnings: true });
     // Nur für automatische Tests im Emulator: Anmeldung ohne Google-Fenster

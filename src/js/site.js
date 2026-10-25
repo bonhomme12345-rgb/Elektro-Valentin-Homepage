@@ -48,10 +48,10 @@ async function loadImages(db) {
   await Promise.all(keys.map(async (key) => {
     const snap = await getDoc(doc(db, 'images', key)).catch(() => null);
     if (!snap?.exists()) return;
-    const { data, alt } = snap.data();
+    const { url, data, alt } = snap.data();
     slots.filter((el) => el.dataset.image === key).forEach((el) => {
       const img = new Image();
-      img.src = data;
+      img.src = url || data;
       img.alt = alt || el.dataset.alt || '';
       img.loading = 'lazy';
       el.replaceChildren(img);
