@@ -4,10 +4,11 @@ import { build } from 'esbuild';
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { TEXTS, DEFAULT_SERVICES, DEFAULT_HOURS, DEFAULT_REFERENCES } from '../src/js/content.js';
 import * as R from '../src/js/render.js';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SRC = join(ROOT, 'src');
 const DIST = join(ROOT, 'dist');
 const watch = process.argv.includes('--watch');
@@ -69,7 +70,7 @@ async function buildSite() {
 
   for (const file of (await readdir(join(SRC, 'pages'))).filter((f) => f.endsWith('.html'))) {
     let html = await readFile(join(SRC, 'pages', file), 'utf8');
-    const metaMatch = /^<!--meta (\{.*\}) -->\n/.exec(html);
+    const metaMatch = /^<!--meta (\{.*\}) -->\r?\n/.exec(html);
     if (!metaMatch) throw new Error(`${file}: Kopfzeile <!--meta {…} --> fehlt`);
     const meta = { robots: 'index, follow', ...JSON.parse(metaMatch[1]) };
     html = html.slice(metaMatch[0].length)
