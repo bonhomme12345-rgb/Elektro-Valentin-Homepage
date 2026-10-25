@@ -5,9 +5,9 @@ Texte, Bilder, Leistungen, Referenzen, Neuigkeiten und Öffnungszeiten werden im
 Adminmenü unter `/admin` gepflegt. Anfragen aus dem Kontaktformular landen dort
 unter „Anfragen“.
 
-Alles läuft im kostenlosen Firebase-Tarif (Spark). Fotos werden beim Hochladen
-verkleinert und direkt in der Datenbank gespeichert, dafür ist kein
-kostenpflichtiger Speicher nötig.
+Texte und Einstellungen liegen in Firestore, Fotos in Firebase Storage
+(Blaze-Tarif, im Freikontingent). Fotos werden beim Hochladen im Browser auf
+höchstens 2400 px verkleinert.
 
 ## Seiten
 
@@ -43,7 +43,13 @@ Projekt: [elektro-valentin](https://console.firebase.google.com/project/elektro-
    Jede Änderung auf `main` wird automatisch veröffentlicht, jeder Pull Request
    bekommt einen Vorschau-Link (siehe „Summary“ des GitHub-Laufs).
 
-6. **Eigene Domain:** Hosting → „Benutzerdefinierte Domain hinzufügen“ und die
+6. **Fotospeicher (Storage):** Firebase-Konsole → Storage → „Jetzt starten“,
+   Standort `europe-west3`, Produktionsmodus. Einmalig danach auf dem eigenen
+   Rechner im Projektordner `npx firebase deploy --only storage --project elektro-valentin`
+   ausführen (unter Windows `npx.cmd`) und die Frage nach der IAM-Rolle mit
+   „Y“ beantworten. Damit dürfen die Storage-Regeln in der Sammlung `admins`
+   nachsehen, wer Fotos hochladen darf.
+7. **Eigene Domain:** Hosting → „Benutzerdefinierte Domain hinzufügen“ und die
    angezeigten DNS-Einträge bei Squarespace Domains eintragen. Danach unter
    Authentication → Einstellungen → Autorisierte Domains prüfen, dass die Domain
    dort steht, sonst klappt die Anmeldung im Adminmenü nicht.

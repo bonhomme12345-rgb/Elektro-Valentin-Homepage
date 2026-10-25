@@ -49,12 +49,12 @@ jobs:
           echo "::notice title=Vorschau::$URL"
           echo "### Vorschau: $URL" >> "$GITHUB_STEP_SUMMARY"
 
-      # Auf main: Seite und Datenbank-Regeln live schalten
+      # Auf main: Seite sowie Regeln für Datenbank und Fotos live schalten
       - name: Live veröffentlichen
         if: github.event_name != 'pull_request'
         run: |
           set -o pipefail
-          if ! npx firebase deploy --only hosting,firestore --project "$PROJECT_ID" --non-interactive 2>&1 | tee deploy.log; then
+          if ! npx firebase deploy --only hosting,firestore,storage --project "$PROJECT_ID" --non-interactive 2>&1 | tee deploy.log; then
             echo "::error title=Veröffentlichen fehlgeschlagen::$(tail -c 1500 deploy.log | tr '\n' ' ')"
             exit 1
           fi

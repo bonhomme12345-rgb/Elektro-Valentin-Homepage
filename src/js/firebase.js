@@ -11,7 +11,7 @@ let ready;
 export function initFirebase() {
   ready ??= (async () => {
     const config = isLocal
-      ? { projectId: 'demo-elektro-valentin', apiKey: 'demo-key', authDomain: location.host }
+      ? { projectId: 'demo-elektro-valentin', apiKey: 'demo-key', authDomain: location.host, storageBucket: 'demo-elektro-valentin.appspot.com' }
       : await fetch('/__/firebase/init.json').then((r) => {
         if (!r.ok) throw new Error('Firebase-Konfiguration nicht gefunden');
         return r.json();
