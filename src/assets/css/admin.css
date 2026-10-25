@@ -41,8 +41,8 @@ details.group summary { font-family: var(--f-display); font-weight: 800; color: 
 .item { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
 .message .msg-contact { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .message .msg-body { white-space: pre-wrap; overflow-wrap: anywhere; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 999px; font-weight: 700; z-index: 30; max-width: calc(100% - 32px); }
-.toast.error { background: var(--error); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 12px; font-weight: 700; z-index: 30; width: max-content; max-width: min(640px, calc(100% - 32px)); line-height: 1.4; cursor: pointer; }
+.toast.error { background: var(--error); color: #fff; }
 .error { color: var(--error); }
 code { background: var(--paper-2); padding: 1px 6px; border-radius: 4px; }
 @media (max-width: 760px) {

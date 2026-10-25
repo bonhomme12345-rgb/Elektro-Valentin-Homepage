@@ -38,7 +38,21 @@ function toast(text, kind = 'ok') {
   el.className = 'toast ' + kind;
   el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, 4000);
+  // Fehler bleiben länger stehen, damit man sie lesen kann; Klick schließt.
+  toastTimer = setTimeout(() => { el.hidden = true; }, kind === 'error' ? 20000 : 4000);
+}
+
+function errorText(err) {
+  const known = {
+    'permission-denied': 'Keine Berechtigung.',
+    'storage/unauthorized': 'Keine Berechtigung zum Hochladen von Fotos.',
+    'storage/unauthenticated': 'Bitte neu anmelden.',
+    'storage/bucket-not-found': 'Der Fotospeicher wurde nicht gefunden.',
+    'storage/no-default-bucket': 'Der Fotospeicher wurde nicht gefunden.',
+    'storage/quota-exceeded': 'Der Fotospeicher ist voll.',
+    'storage/retry-limit-exceeded': 'Die Verbindung ist zu langsam, bitte noch einmal versuchen.',
+  };
+  return (known[err.code] || err.message) + (err.code ? ` (${err.code})` : '');
 }
 
 async function run(button, label, fn) {
@@ -49,7 +63,7 @@ async function run(button, label, fn) {
     await fn();
   } catch (err) {
     console.error(err);
-    toast('Das hat nicht geklappt: ' + (err.code === 'permission-denied' ? 'keine Berechtigung.' : err.message), 'error');
+    toast('Das hat nicht geklappt: ' + errorText(err), 'error');
   } finally {
     button.disabled = false;
     button.textContent = old;
@@ -125,7 +139,7 @@ function imageControl(key, label, { disabledText } = {}) {
       toast('Foto gespeichert.');
     } catch (err) {
       console.error(err);
-      toast(err.message, 'error');
+      toast('Foto nicht gespeichert: ' + errorText(err), 'error');
     } finally {
       status.textContent = '';
       file.value = '';
@@ -447,7 +461,10 @@ async function start() {
   ({ db } = await initFirebase());
   const { app } = await initFirebase();
   const auth = getAuth(app);
-  storage = getStorage(app);
+  // Neue Firebase-Projekte heißen <projekt>.firebasestorage.app; falls die
+  // Konfiguration den Speicher (noch) nicht nennt, wird dieser Name genommen.
+  const bucket = app.options.storageBucket || `${app.options.projectId}.firebasestorage.app`;
+  storage = getStorage(app, `gs://${bucket}`);
   if (isLocal) connectStorageEmulator(storage, location.hostname, 9199);
   if (isLocal) {
     connectAuthEmulator(auth, `http://${location.hostname}:9099`, { disableWarnings: true });
@@ -463,6 +480,7 @@ async function start() {
       if (err.code !== 'auth/popup-closed-by-user') toast('Anmeldung fehlgeschlagen: ' + err.message, 'error');
     }
   });
+  $('#toast').addEventListener('click', () => { $('#toast').hidden = true; });
   document.querySelectorAll('[data-logout]').forEach((b) => b.addEventListener('click', () => signOut(auth)));
   document.querySelectorAll('.admin-nav button').forEach((b) => b.addEventListener('click', () => openPanel(b.dataset.panel)));
 
